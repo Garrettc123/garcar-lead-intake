@@ -5,6 +5,7 @@ dockerfilePath = "Dockerfile"
 [deploy]
 startCommand = "npm start"
 healthcheckPath = "/readyz"
-healthcheckTimeout = 100
+# Railway expects healthcheckTimeout in seconds.
+healthcheckTimeout = 10
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

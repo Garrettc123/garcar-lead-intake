@@ -70,7 +70,3 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 2
             failureThreshold: 3
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "sleep 5"]

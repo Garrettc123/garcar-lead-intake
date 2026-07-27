@@ -4,6 +4,8 @@ const { loadConfig } = require('./config');
 const logger = require('./logger');
 const { validateLeadPayload } = require('./validation');
 
+const MAX_BODY_BYTES = 32 * 1024;
+
 function createRateLimiter(config) {
   const buckets = new Map();
 
@@ -30,28 +32,46 @@ function createRateLimiter(config) {
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let body = '';
+    let finished = false;
 
     req.on('data', (chunk) => {
+      if (finished) {
+        return;
+      }
+
       body += chunk;
-      if (body.length > 32768) {
+      if (body.length > MAX_BODY_BYTES) {
+        finished = true;
+        req.destroy();
         reject(new Error('request body too large'));
       }
     });
 
     req.on('end', () => {
+      if (finished) {
+        return;
+      }
+
       if (!body) {
         resolve({});
         return;
       }
 
       try {
+        finished = true;
         resolve(JSON.parse(body));
       } catch (error) {
+        finished = true;
         reject(new Error('invalid JSON body'));
       }
     });
 
-    req.on('error', reject);
+    req.on('error', (error) => {
+      if (!finished) {
+        finished = true;
+        reject(error);
+      }
+    });
   });
 }
 

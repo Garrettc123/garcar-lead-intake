@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createServer } = require('../src/server');
+const BEARER_SCHEME = 'Bearer';
 
 async function startTestServer(overrides = {}) {
   const app = createServer({
@@ -105,7 +106,7 @@ test('admin stats endpoint requires bearer token', async (t) => {
 
   const authorized = await fetch(`${baseUrl}/api/admin/stats`, {
     headers: {
-      authorization: `${String.fromCharCode(66, 101, 97, 114, 101, 114)} admin-token`
+      authorization: `${BEARER_SCHEME} admin-token`
     }
   });
   assert.equal(authorized.status, 200);

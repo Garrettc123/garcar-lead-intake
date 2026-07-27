@@ -11,8 +11,12 @@ function parseInteger(rawValue, key, fallback) {
     return fallback;
   }
 
+  if (!/^\d+$/.test(rawValue)) {
+    throw new Error(`${key} must be a positive integer`);
+  }
+
   const parsed = Number.parseInt(rawValue, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
+  if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error(`${key} must be a positive integer`);
   }
   return parsed;
