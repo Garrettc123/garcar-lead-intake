@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: garcar-lead-intake-config
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  ENFORCE_TLS_HEADERS: "true"
+  RATE_LIMIT_WINDOW_MS: "60000"
+  RATE_LIMIT_MAX: "30"
+  GRACEFUL_SHUTDOWN_TIMEOUT_MS: "10000"

@@ -1,0 +1,15 @@
+{
+  "name": "garcar-lead-intake",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contractor lead intake service baseline",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "lint": "node --check src/*.js test/*.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

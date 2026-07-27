@@ -1,0 +1,21 @@
+name: Production Approval Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: "Commit SHA approved for production deployment"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  human-approval-required:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Verify explicit operator approval
+        run: |
+          echo "Manual approval gate invoked for SHA: ${{ github.event.inputs.release_sha }}"
+          echo "No production deployment is executed by this workflow."
