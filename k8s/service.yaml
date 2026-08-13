@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: garcar-lead-intake
+  labels:
+    app: garcar-lead-intake
+spec:
+  type: ClusterIP
+  selector:
+    app: garcar-lead-intake
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
