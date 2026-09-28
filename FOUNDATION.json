@@ -1,0 +1,7 @@
+{
+  "system": "garcar-lead-intake",
+  "tier": "CASH",
+  "stamp": "sidecar",
+  "reason": "Node src/ intake already present",
+  "stamped_by": "garcar-repo-foundry"
+}
