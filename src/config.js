@@ -43,6 +43,7 @@ function loadConfig(env = process.env) {
     nodeEnv: env.NODE_ENV || DEFAULTS.nodeEnv,
     port,
     adminApiToken: env.ADMIN_API_TOKEN || '',
+    leadJournalPath: env.LEAD_JOURNAL_PATH || '',
     enforceTlsHeaders: parseBoolean(env.ENFORCE_TLS_HEADERS, false),
     rateLimitWindowMs,
     rateLimitMax,
