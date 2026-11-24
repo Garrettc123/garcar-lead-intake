@@ -21,4 +21,4 @@ Default local port: `3000`
 
 ## Notes
 
-This baseline does **not** persist leads. Accepted leads are only acknowledged and logged to stdout in structured JSON format. See `/DEPLOYMENT.md` for persistence and production safety requirements.
+The intake now returns **202** only after appending the validated lead to a local, permission-restricted, `fsync`-confirmed NDJSON journal. Set `LEAD_JOURNAL_PATH` to an **absolute path on a persistent private volume**. Without it (or when unwritable), `/readyz` and intake fail closed with **503**. This is a single-host durability candidate, **not** a multi-replica production database. Secure access, encryption at rest, backup/restore and retention must be verified before accepting real customer records. No automatic outreach or payment occurs.

@@ -1,5 +1,8 @@
 const http = require('node:http');
 const crypto = require('node:crypto');
+const os = require('node:os');
+const path = require('node:path');
+const { journalReady, persistLead } = require('./durable_store');
 const { loadConfig } = require('./config');
 const logger = require('./logger');
 const { validateLeadPayload } = require('./validation');
@@ -85,10 +88,8 @@ function sendJson(res, statusCode, payload) {
 }
 
 function getClientIp(req) {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
-  }
+  // X-Forwarded-For is client-controlled unless a trusted proxy is configured.
+  // Rate-limit the actual socket peer until verified proxy support exists.
   return req.socket.remoteAddress || 'unknown';
 }
 
@@ -113,6 +114,10 @@ function isAuthorized(req, config) {
 }
 
 function createServer(config = loadConfig()) {
+  const journalPath = config.leadJournalPath ||
+    (config.nodeEnv === 'test'
+      ? path.join(os.tmpdir(), `garcar-intake-test-${crypto.randomUUID()}.ndjson`)
+      : '');
   const rateLimiter = createRateLimiter(config);
   const metrics = {
     accepted: 0,
@@ -141,12 +146,14 @@ function createServer(config = loadConfig()) {
         sendJson(res, 503, { status: 'shutting_down' });
         return;
       }
+      if (!journalReady(journalPath)) {
+        sendJson(res, 503, { status: 'storage_unavailable' });
+        return;
+      }
 
       sendJson(res, 200, {
         status: 'ready',
-        checks: {
-          configLoaded: true
-        }
+        checks: { durableJournal: true }
       });
       return;
     }
@@ -186,18 +193,28 @@ function createServer(config = loadConfig()) {
         }
 
         const leadId = crypto.randomUUID();
+        const receivedAt = new Date().toISOString();
+        try {
+          persistLead(journalPath, {
+            leadId,
+            receivedAt,
+            fullName: payload.fullName,
+            email: payload.email,
+            phone: payload.phone || null,
+            message: payload.message,
+            consentGiven: true,
+            consentTimestamp: payload.consentTimestamp || receivedAt,
+            source: typeof payload.source === 'string' ? payload.source : 'unknown'
+          });
+        } catch (_storageError) {
+          metrics.rejected += 1;
+          logger.error('lead_intake_persistence_failed', { leadId });
+          sendJson(res, 503, { error: 'storage_unavailable' });
+          return;
+        }
         metrics.accepted += 1;
-        logger.info('lead_intake_received', {
-          leadId,
-          consentGiven: true,
-          consentTimestamp: payload.consentTimestamp || new Date().toISOString(),
-          source: payload.source || 'unknown'
-        });
-
-        sendJson(res, 202, {
-          status: 'accepted',
-          leadId
-        });
+        logger.info('lead_intake_received', { leadId, stored: true });
+        sendJson(res, 202, { status: 'accepted', leadId });
       } catch (error) {
         const status = error.message === 'request body too large' ? 413 : 400;
         sendJson(res, status, {

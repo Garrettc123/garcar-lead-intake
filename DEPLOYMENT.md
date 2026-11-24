@@ -14,13 +14,15 @@ Do **not** commit real secrets. Use Railway variables or Kubernetes Secrets.
 ## 2) Startup, migrations, and data persistence
 
 Current service behavior:
-- No database integration exists yet.
-- Lead payloads are validated, consent is required, and accepted requests are logged/acknowledged.
-- No customer lead data is stored durably by this code.
+- `LEAD_JOURNAL_PATH` is required outside tests and must name an absolute file path on a private persistent volume.
+- Validated lead data is appended to a local NDJSON file with restrictive permissions and fsync before HTTP 202.
+- Without a writable journal, /readyz and lead intake fail closed with HTTP 503; metrics never claim successful intake.
+- This does **not** provide a multi-host transaction log, per-lead idempotency, database migrations, encryption, lifecycle retention, or verified backup/restore.
 
 Implication:
-- Running in ephemeral containers means lead records are not recoverable from app state.
-- Before production intake, integrate durable storage (managed DB/CRM/queue) and add migration tooling for schema/version control.
+- Ephemeral containers **must not** be used for this journal. Do not scale this service beyond one writer with this storage backend.
+- Before enabling production traffic, verify a persistent encrypted volume, restricted access, backup and restore drills, and applicable privacy retention policy.
+- Migrate to a managed durable database or queue (with idempotency and transactional acknowledgements) before multi-replica scaling.
 
 ## 3) Railway deployment (controlled)
 
