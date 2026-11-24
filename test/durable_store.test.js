@@ -10,7 +10,7 @@ const { journalReady, persistLead } = require('../src/durable_store');
 const payload = {
   fullName: 'Example Buyer',
   email: 'buyer@example.com',
-  message: 'Please review my company's callback process.',
+  message: "Please review my company\'s callback process.",
   consentGiven: true,
   source: 'local-test'
 };
